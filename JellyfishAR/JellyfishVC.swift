@@ -50,6 +50,8 @@ class JellyfishVC: UIViewController {
         sceneView.scene.rootNode.enumerateHierarchy { (node, _) in
             node.removeFromParentNode()
         }
+        self.sceneView.session.pause()
+        self.sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
     }
     
     func addNode() {
@@ -66,19 +68,23 @@ class JellyfishVC: UIViewController {
         let sceneViewTappedOn = sender.view as! SCNView
         let touchCoords = sender.location(in: sceneViewTappedOn)
         let hitTest = sceneViewTappedOn.hitTest(touchCoords)
-        if !hitTest.isEmpty && countdown > 0 {
-            let results = hitTest.first!
-            let node = results.node
-            // Check if animation is occurring
-            if node.animationKeys.isEmpty {
-                SCNTransaction.begin()
-                self.animateNode(node: node)
-                SCNTransaction.completionBlock = {
-                    node.removeFromParentNode()
-                    self.addNode()
-                    self.restoreTimer()
+        if hitTest.isEmpty {
+            print("didn't hit anything")
+        } else {
+            if countdown > 0 {
+                let results = hitTest.first!
+                let node = results.node
+                // Check if animation is occurring
+                if node.animationKeys.isEmpty {
+                    SCNTransaction.begin()
+                    self.animateNode(node: node)
+                    SCNTransaction.completionBlock = {
+                        node.removeFromParentNode()
+                        self.addNode()
+                        self.restoreTimer()
+                    }
+                    SCNTransaction.commit()
                 }
-                SCNTransaction.commit()
             }
         }
     }
